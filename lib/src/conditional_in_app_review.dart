@@ -13,8 +13,8 @@ final class ConditionalInAppReview {
     ReviewStorage? storage,
     ReviewRequester? requester,
     DateTime Function()? clock,
-  })  : _storage = storage ?? SharedPreferencesReviewStorage(),
-        _requester = requester ?? InAppReviewRequester(),
+  })  : _storageOverride = storage,
+        _requesterOverride = requester,
         _clock = clock ?? DateTime.now {
     _validateConditions(conditions);
   }
@@ -22,9 +22,18 @@ final class ConditionalInAppReview {
   /// Conditions evaluated before requesting a review.
   final ReviewConditions conditions;
 
-  final ReviewStorage _storage;
-  final ReviewRequester _requester;
+  final ReviewStorage? _storageOverride;
+  final ReviewRequester? _requesterOverride;
   final DateTime Function() _clock;
+
+  ReviewStorage? _defaultStorage;
+  ReviewRequester? _defaultRequester;
+
+  ReviewStorage get _storage =>
+      _storageOverride ?? (_defaultStorage ??= SharedPreferencesReviewStorage());
+
+  ReviewRequester get _requester =>
+      _requesterOverride ?? (_defaultRequester ??= InAppReviewRequester());
 
   bool _initialized = false;
   bool _requestInProgress = false;
