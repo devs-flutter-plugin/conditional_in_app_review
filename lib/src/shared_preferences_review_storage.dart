@@ -8,12 +8,15 @@ final class SharedPreferencesReviewStorage implements ReviewStorage {
   SharedPreferencesReviewStorage({
     SharedPreferencesAsync? preferences,
     this.keyPrefix = 'conditional_in_app_review',
-  }) : _preferences = preferences ?? SharedPreferencesAsync();
+  }) : _preferences = preferences;
 
-  final SharedPreferencesAsync _preferences;
+  SharedPreferencesAsync? _preferences;
 
   /// Prefix used for every key owned by this package.
   final String keyPrefix;
+
+  SharedPreferencesAsync get _prefs =>
+      _preferences ??= SharedPreferencesAsync();
 
   String get _firstInitializedAtKey => '$keyPrefix.first_initialized_at';
   String get _launchCountKey => '$keyPrefix.launch_count';
@@ -23,13 +26,13 @@ final class SharedPreferencesReviewStorage implements ReviewStorage {
 
   @override
   Future<DateTime?> getFirstInitializedAt() async {
-    final milliseconds = await _preferences.getInt(_firstInitializedAtKey);
+    final milliseconds = await _prefs.getInt(_firstInitializedAtKey);
     return _dateTimeFromMilliseconds(milliseconds);
   }
 
   @override
   Future<void> setFirstInitializedAt(DateTime value) {
-    return _preferences.setInt(
+    return _prefs.setInt(
       _firstInitializedAtKey,
       value.millisecondsSinceEpoch,
     );
@@ -37,56 +40,56 @@ final class SharedPreferencesReviewStorage implements ReviewStorage {
 
   @override
   Future<int> getLaunchCount() async {
-    return await _preferences.getInt(_launchCountKey) ?? 0;
+    return await _prefs.getInt(_launchCountKey) ?? 0;
   }
 
   @override
   Future<void> setLaunchCount(int value) {
-    return _preferences.setInt(_launchCountKey, value);
+    return _prefs.setInt(_launchCountKey, value);
   }
 
   @override
   Future<int> getSignificantEventCount() async {
-    return await _preferences.getInt(_significantEventCountKey) ?? 0;
+    return await _prefs.getInt(_significantEventCountKey) ?? 0;
   }
 
   @override
   Future<void> setSignificantEventCount(int value) {
-    return _preferences.setInt(_significantEventCountKey, value);
+    return _prefs.setInt(_significantEventCountKey, value);
   }
 
   @override
   Future<DateTime?> getLastRequestAt() async {
-    final milliseconds = await _preferences.getInt(_lastRequestAtKey);
+    final milliseconds = await _prefs.getInt(_lastRequestAtKey);
     return _dateTimeFromMilliseconds(milliseconds);
   }
 
   @override
   Future<void> setLastRequestAt(DateTime value) {
-    return _preferences.setInt(_lastRequestAtKey, value.millisecondsSinceEpoch);
+    return _prefs.setInt(_lastRequestAtKey, value.millisecondsSinceEpoch);
   }
 
   @override
   Future<String?> getLastRequestedVersion() {
-    return _preferences.getString(_lastRequestedVersionKey);
+    return _prefs.getString(_lastRequestedVersionKey);
   }
 
   @override
   Future<void> setLastRequestedVersion(String? value) {
     if (value == null) {
-      return _preferences.remove(_lastRequestedVersionKey);
+      return _prefs.remove(_lastRequestedVersionKey);
     }
-    return _preferences.setString(_lastRequestedVersionKey, value);
+    return _prefs.setString(_lastRequestedVersionKey, value);
   }
 
   @override
   Future<void> reset() async {
     await Future.wait<void>([
-      _preferences.remove(_firstInitializedAtKey),
-      _preferences.remove(_launchCountKey),
-      _preferences.remove(_significantEventCountKey),
-      _preferences.remove(_lastRequestAtKey),
-      _preferences.remove(_lastRequestedVersionKey),
+      _prefs.remove(_firstInitializedAtKey),
+      _prefs.remove(_launchCountKey),
+      _prefs.remove(_significantEventCountKey),
+      _prefs.remove(_lastRequestAtKey),
+      _prefs.remove(_lastRequestedVersionKey),
     ]);
   }
 
