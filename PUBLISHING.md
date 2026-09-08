@@ -2,13 +2,21 @@
 
 This package is prepared for publication on pub.dev without storing long-lived publishing credentials in GitHub.
 
+All repository workflows run on self-hosted GitHub Actions runners.
+
+## Runner requirement
+
+The repository is owned by `devs-flutter-plugin`, so it must have access to a self-hosted runner through a repository runner, an organization runner group, or an Enterprise runner group shared with this organization.
+
+Both `.github/workflows/ci.yml` and `.github/workflows/publish.yml` use `runs-on: self-hosted`.
+
 ## First publication
 
 Pub.dev automated publishing can only be enabled after the package already exists. The first version must therefore be published manually from a trusted development machine.
 
 Before publishing:
 
-1. Confirm the `main` CI workflow is green.
+1. Confirm the `main` CI workflow is green on the self-hosted runner.
 2. Confirm `pubspec.yaml` and `CHANGELOG.md` contain the intended version.
 3. Run `dart pub publish --dry-run` and resolve every warning or error.
 4. Publish with `dart pub publish` and complete the pub.dev authentication flow.
@@ -26,7 +34,7 @@ After the first version exists on pub.dev:
 5. Require the GitHub Actions environment named `pub.dev`.
 6. In GitHub, create the `pub.dev` environment and configure required reviewers if desired.
 
-The repository already contains `.github/workflows/publish.yml`, which uses the Dart team's reusable publishing workflow and OIDC authentication.
+The repository contains `.github/workflows/publish.yml`, which runs directly on the self-hosted runner and uses GitHub OIDC authentication. No long-lived pub.dev publishing token is required.
 
 ## Releasing a version
 
@@ -42,7 +50,7 @@ git tag v0.2.0
 git push origin v0.2.0
 ```
 
-The tag version and `pubspec.yaml` version must match. The publish workflow will authenticate to pub.dev using a short-lived GitHub OIDC token.
+The tag version and `pubspec.yaml` version must match. The publish workflow authenticates to pub.dev using a short-lived GitHub OIDC token.
 
 ## Security
 
