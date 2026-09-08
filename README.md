@@ -13,8 +13,10 @@ The package delegates the native review flow to [`in_app_review`](https://pub.de
 - Optional one-attempt-per-app-version policy.
 - Optional delay before requesting the native review flow.
 - Detailed decision result for analytics and debugging.
+- Read-only persisted state snapshots.
 - `SharedPreferencesAsync` storage by default.
 - Injectable storage, requester, and clock for deterministic tests.
+- No package-owned Android or iOS implementation.
 
 ## Installation
 
@@ -32,7 +34,7 @@ dependencies:
       url: https://github.com/devs-flutter-plugin/conditional_in_app_review.git
 ```
 
-## Usage
+## Basic usage
 
 Create a single instance for the app lifecycle and initialize it once when the application starts:
 
@@ -50,7 +52,7 @@ final appReview = ConditionalInAppReview(
 await appReview.initialize();
 ```
 
-`initialize()` records the first initialization timestamp and, by default, one launch. Calling it again on the same instance does not increment the launch counter again.
+`initialize()` records the first initialization timestamp and, by default, one launch. Repeated or concurrent initialization calls on the same instance are deduplicated and do not increment the launch counter more than once.
 
 Register meaningful positive interactions from your product flow:
 
@@ -71,6 +73,21 @@ if (decision == ReviewDecision.requested) {
 ```
 
 When `requestOncePerVersion` is enabled, `currentVersion` is required. The package intentionally does not depend on `package_info_plus`; the application may provide its version using whichever mechanism it already uses.
+
+## Inspecting state
+
+Use `getSnapshot()` when you need counters and persisted metadata for diagnostics or analytics:
+
+```dart
+final snapshot = await appReview.getSnapshot();
+
+print(snapshot.launchCount);
+print(snapshot.significantEventCount);
+print(snapshot.lastRequestAt);
+print(snapshot.lastRequestedVersion);
+```
+
+A snapshot is read-only and can be obtained even before `initialize()` is called on the current manager instance.
 
 ## Decisions
 
@@ -102,11 +119,13 @@ A significant event should represent a successful or valuable product interactio
 - a task successfully finished;
 - a user returning after meaningful usage.
 
-The package stays domain-agnostic: your application decides what qualifies as significant.
+The package intentionally keeps this as a generic counter. Your application decides what qualifies as significant, avoiding domain-specific event names and persistence migrations inside the package.
 
-## Testing
+## Custom storage and testing
 
-The constructor accepts custom `ReviewStorage`, `ReviewRequester`, and clock implementations. This makes review policies testable without invoking Android or iOS APIs.
+The constructor accepts custom `ReviewStorage`, `ReviewRequester`, and clock implementations. This makes review policies testable without invoking Android or iOS APIs and lets applications replace the default persistence layer if necessary.
+
+Invalid conditions such as negative counters, cooldowns, or delays are rejected when `ConditionalInAppReview` is created.
 
 ## Platform behavior
 
