@@ -1,4 +1,6 @@
 /// Conditional in-app review requests for Flutter applications.
+library;
+
 export 'src/conditional_in_app_review.dart';
 export 'src/review_conditions.dart';
 export 'src/review_decision.dart';
