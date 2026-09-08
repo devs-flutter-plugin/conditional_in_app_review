@@ -5,3 +5,7 @@
 - Add `SharedPreferencesAsync` persistence.
 - Delegate native review requests to `in_app_review`.
 - Add injectable storage, requester, and clock abstractions for testing.
+- Deduplicate concurrent initialization calls.
+- Add runtime validation for invalid review conditions.
+- Add read-only `ReviewSnapshot` diagnostics.
+- Add CI validation for formatting, analysis, tests, and package publication readiness.

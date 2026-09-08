@@ -1,6 +1,7 @@
 import 'review_conditions.dart';
 import 'review_decision.dart';
 import 'review_requester.dart';
+import 'review_snapshot.dart';
 import 'review_storage.dart';
 import 'shared_preferences_review_storage.dart';
 
@@ -14,7 +15,9 @@ final class ConditionalInAppReview {
     DateTime Function()? clock,
   })  : _storage = storage ?? SharedPreferencesReviewStorage(),
         _requester = requester ?? InAppReviewRequester(),
-        _clock = clock ?? DateTime.now;
+        _clock = clock ?? DateTime.now {
+    _validateConditions(conditions);
+  }
 
   /// Conditions evaluated before requesting a review.
   final ReviewConditions conditions;
@@ -25,6 +28,7 @@ final class ConditionalInAppReview {
 
   bool _initialized = false;
   bool _requestInProgress = false;
+  Future<void>? _initializationFuture;
 
   /// Whether this manager instance has completed initialization.
   bool get isInitialized => _initialized;
@@ -32,24 +36,40 @@ final class ConditionalInAppReview {
   /// Initializes package state and optionally registers one application launch.
   ///
   /// Calling this method multiple times on the same instance is idempotent and
-  /// does not register additional launches.
-  Future<void> initialize({bool registerLaunch = true}) async {
+  /// does not register additional launches. Concurrent calls share the same
+  /// initialization operation; the first call determines `registerLaunch`.
+  Future<void> initialize({bool registerLaunch = true}) {
     if (_initialized) {
-      return;
+      return Future<void>.value();
     }
 
-    final now = _clock();
-    final firstInitializedAt = await _storage.getFirstInitializedAt();
-    if (firstInitializedAt == null) {
-      await _storage.setFirstInitializedAt(now);
+    final currentInitialization = _initializationFuture;
+    if (currentInitialization != null) {
+      return currentInitialization;
     }
 
-    if (registerLaunch) {
-      final launches = await _storage.getLaunchCount();
-      await _storage.setLaunchCount(launches + 1);
-    }
+    final initialization = _initialize(registerLaunch: registerLaunch);
+    _initializationFuture = initialization;
+    return initialization;
+  }
 
-    _initialized = true;
+  Future<void> _initialize({required bool registerLaunch}) async {
+    try {
+      final now = _clock();
+      final firstInitializedAt = await _storage.getFirstInitializedAt();
+      if (firstInitializedAt == null) {
+        await _storage.setFirstInitializedAt(now);
+      }
+
+      if (registerLaunch) {
+        final launches = await _storage.getLaunchCount();
+        await _storage.setLaunchCount(launches + 1);
+      }
+
+      _initialized = true;
+    } finally {
+      _initializationFuture = null;
+    }
   }
 
   /// Registers one or more application launches explicitly.
@@ -71,6 +91,20 @@ final class ConditionalInAppReview {
 
     final events = await _storage.getSignificantEventCount();
     await _storage.setSignificantEventCount(events + count);
+  }
+
+  /// Returns the currently persisted counters and review request metadata.
+  ///
+  /// This method can be used for diagnostics and analytics and does not require
+  /// the manager instance to be initialized first.
+  Future<ReviewSnapshot> getSnapshot() async {
+    return ReviewSnapshot(
+      firstInitializedAt: await _storage.getFirstInitializedAt(),
+      launchCount: await _storage.getLaunchCount(),
+      significantEventCount: await _storage.getSignificantEventCount(),
+      lastRequestAt: await _storage.getLastRequestAt(),
+      lastRequestedVersion: await _storage.getLastRequestedVersion(),
+    );
   }
 
   /// Evaluates the configured conditions without invoking the native review API.
@@ -164,15 +198,61 @@ final class ConditionalInAppReview {
 
   /// Clears all persisted review state owned by the configured storage.
   Future<void> reset() async {
+    if (_requestInProgress) {
+      throw StateError('Cannot reset while a review request is in progress.');
+    }
+
+    final initialization = _initializationFuture;
+    if (initialization != null) {
+      await initialization;
+    }
+
     await _storage.reset();
     _initialized = false;
-    _requestInProgress = false;
   }
 
   void _requireInitialized() {
     if (!_initialized) {
       throw StateError(
         'ConditionalInAppReview.initialize() must be called first.',
+      );
+    }
+  }
+
+  static void _validateConditions(ReviewConditions conditions) {
+    if (conditions.minDaysAfterInstall < 0) {
+      throw ArgumentError.value(
+        conditions.minDaysAfterInstall,
+        'minDaysAfterInstall',
+        'Must not be negative.',
+      );
+    }
+    if (conditions.minLaunches < 0) {
+      throw ArgumentError.value(
+        conditions.minLaunches,
+        'minLaunches',
+        'Must not be negative.',
+      );
+    }
+    if (conditions.minSignificantEvents < 0) {
+      throw ArgumentError.value(
+        conditions.minSignificantEvents,
+        'minSignificantEvents',
+        'Must not be negative.',
+      );
+    }
+    if (conditions.cooldown.isNegative) {
+      throw ArgumentError.value(
+        conditions.cooldown,
+        'cooldown',
+        'Must not be negative.',
+      );
+    }
+    if (conditions.delayBeforeRequest.isNegative) {
+      throw ArgumentError.value(
+        conditions.delayBeforeRequest,
+        'delayBeforeRequest',
+        'Must not be negative.',
       );
     }
   }

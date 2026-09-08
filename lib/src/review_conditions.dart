@@ -8,9 +8,7 @@ final class ReviewConditions {
     this.cooldown = const Duration(days: 90),
     this.requestOncePerVersion = false,
     this.delayBeforeRequest = Duration.zero,
-  })  : assert(minDaysAfterInstall >= 0),
-        assert(minLaunches >= 0),
-        assert(minSignificantEvents >= 0);
+  });
 
   /// Minimum whole days since the package first initialized in this app install.
   final int minDaysAfterInstall;
