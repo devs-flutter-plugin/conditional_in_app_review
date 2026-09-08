@@ -1,0 +1,20 @@
+name: conditional_in_app_review
+description: Request in-app reviews only when configurable conditions are met, including launches, usage events, cooldown periods, and app version.
+version: 0.1.0
+repository: https://github.com/devs-flutter-plugin/conditional_in_app_review
+issue_tracker: https://github.com/devs-flutter-plugin/conditional_in_app_review/issues
+
+environment:
+  sdk: ^3.9.0
+  flutter: ">=3.35.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  in_app_review: ^2.0.12
+  shared_preferences: ^2.5.5
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
