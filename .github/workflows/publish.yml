@@ -7,8 +7,26 @@ on:
 
 jobs:
   publish:
+    runs-on: self-hosted
+    environment: pub.dev
     permissions:
+      contents: read
       id-token: write
-    uses: dart-lang/setup-dart/.github/workflows/publish.yml@v1
-    with:
-      environment: pub.dev
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Dart OIDC
+        uses: dart-lang/setup-dart@v1
+
+      - name: Set up Flutter
+        uses: flutter-actions/setup-flutter@6e2468fd827c4a7337cd4b835a6049b78bc0bd1f
+
+      - name: Install dependencies
+        run: dart pub get
+
+      - name: Validate package publication
+        run: dart pub publish --dry-run
+
+      - name: Publish to pub.dev
+        run: dart pub publish -f
