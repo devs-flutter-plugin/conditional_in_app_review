@@ -2,7 +2,7 @@
 final class ReviewConditions {
   /// Creates a set of review conditions.
   const ReviewConditions({
-    this.minDaysAfterInstall = 7,
+    this.minDaysSinceFirstUse = 7,
     this.minLaunches = 5,
     this.minSignificantEvents = 0,
     this.cooldown = const Duration(days: 90),
@@ -10,8 +10,8 @@ final class ReviewConditions {
     this.delayBeforeRequest = Duration.zero,
   });
 
-  /// Minimum whole days since the package first initialized in this app install.
-  final int minDaysAfterInstall;
+  /// Minimum whole days since this package first records state for the app.
+  final int minDaysSinceFirstUse;
 
   /// Minimum number of application launches registered by this package.
   final int minLaunches;

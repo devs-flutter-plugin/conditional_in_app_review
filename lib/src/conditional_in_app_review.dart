@@ -134,7 +134,7 @@ final class ConditionalInAppReview {
       return ReviewDecision.notInitialized;
     }
 
-    final minimumAge = Duration(days: conditions.minDaysAfterInstall);
+    final minimumAge = Duration(days: conditions.minDaysSinceFirstUse);
     if (now.difference(firstInitializedAt) < minimumAge) {
       return ReviewDecision.notEnoughDays;
     }
@@ -230,10 +230,10 @@ final class ConditionalInAppReview {
   }
 
   static void _validateConditions(ReviewConditions conditions) {
-    if (conditions.minDaysAfterInstall < 0) {
+    if (conditions.minDaysSinceFirstUse < 0) {
       throw ArgumentError.value(
-        conditions.minDaysAfterInstall,
-        'minDaysAfterInstall',
+        conditions.minDaysSinceFirstUse,
+        'minDaysSinceFirstUse',
         'Must not be negative.',
       );
     }

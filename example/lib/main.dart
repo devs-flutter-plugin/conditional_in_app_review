@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 
 final ConditionalInAppReview _appReview = ConditionalInAppReview(
   conditions: const ReviewConditions(
-    minDaysAfterInstall: 0,
+    minDaysSinceFirstUse: 0,
     minLaunches: 1,
     minSignificantEvents: 1,
     cooldown: Duration(days: 90),

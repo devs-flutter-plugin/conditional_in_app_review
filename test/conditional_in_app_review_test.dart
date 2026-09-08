@@ -9,7 +9,7 @@ void main() {
       final clock = _MutableClock(DateTime.utc(2026, 1, 1));
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
-          minDaysAfterInstall: 2,
+          minDaysSinceFirstUse: 2,
           minLaunches: 2,
           minSignificantEvents: 1,
           cooldown: Duration(days: 30),
@@ -65,13 +65,46 @@ void main() {
       expect(storage.launchCount, 1);
     });
 
+    test('preserves state across manager instances', () async {
+      final storage = _MemoryReviewStorage();
+      final requester = _FakeReviewRequester();
+      final clock = _MutableClock(DateTime.utc(2026, 1, 1));
+      final conditions = const ReviewConditions(
+        minDaysSinceFirstUse: 0,
+        minLaunches: 2,
+        cooldown: Duration.zero,
+      );
+
+      final first = ConditionalInAppReview(
+        conditions: conditions,
+        storage: storage,
+        requester: requester,
+        clock: clock.call,
+      );
+      await first.initialize();
+
+      clock.value = DateTime.utc(2026, 1, 2);
+      final second = ConditionalInAppReview(
+        conditions: conditions,
+        storage: storage,
+        requester: requester,
+        clock: clock.call,
+      );
+      await second.initialize();
+
+      final snapshot = await second.getSnapshot();
+      expect(snapshot.firstInitializedAt, DateTime.utc(2026, 1, 1));
+      expect(snapshot.launchCount, 2);
+      expect(await second.evaluateEligibility(), ReviewDecision.eligible);
+    });
+
     test('enforces cooldown after a request', () async {
       final storage = _MemoryReviewStorage();
       final requester = _FakeReviewRequester();
       final clock = _MutableClock(DateTime.utc(2026, 1, 1));
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
-          minDaysAfterInstall: 0,
+          minDaysSinceFirstUse: 0,
           minLaunches: 1,
           cooldown: Duration(days: 10),
         ),
@@ -97,7 +130,7 @@ void main() {
     test('requires currentVersion when once-per-version is enabled', () async {
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
-          minDaysAfterInstall: 0,
+          minDaysSinceFirstUse: 0,
           minLaunches: 1,
           cooldown: Duration.zero,
           requestOncePerVersion: true,
@@ -126,7 +159,7 @@ void main() {
       final storage = _MemoryReviewStorage();
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
-          minDaysAfterInstall: 0,
+          minDaysSinceFirstUse: 0,
           minLaunches: 1,
           cooldown: Duration.zero,
         ),
@@ -145,7 +178,7 @@ void main() {
       final clock = _MutableClock(DateTime.utc(2026, 2, 1));
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
-          minDaysAfterInstall: 0,
+          minDaysSinceFirstUse: 0,
           minLaunches: 1,
           minSignificantEvents: 1,
           cooldown: Duration.zero,
@@ -170,6 +203,12 @@ void main() {
     });
 
     test('rejects invalid conditions consistently', () {
+      expect(
+        () => ConditionalInAppReview(
+          conditions: const ReviewConditions(minDaysSinceFirstUse: -1),
+        ),
+        throwsArgumentError,
+      );
       expect(
         () => ConditionalInAppReview(
           conditions: const ReviewConditions(minLaunches: -1),
@@ -200,7 +239,7 @@ void main() {
       );
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
-          minDaysAfterInstall: 0,
+          minDaysSinceFirstUse: 0,
           minLaunches: 1,
           cooldown: Duration.zero,
         ),
