@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:conditional_in_app_review/conditional_in_app_review.dart';
 import 'package:flutter_test/flutter_test.dart';
 
