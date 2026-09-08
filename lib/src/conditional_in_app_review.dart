@@ -12,9 +12,9 @@ final class ConditionalInAppReview {
     ReviewStorage? storage,
     ReviewRequester? requester,
     DateTime Function()? clock,
-  }) : _storage = storage ?? SharedPreferencesReviewStorage(),
-       _requester = requester ?? InAppReviewRequester(),
-       _clock = clock ?? DateTime.now;
+  })  : _storage = storage ?? SharedPreferencesReviewStorage(),
+        _requester = requester ?? InAppReviewRequester(),
+        _clock = clock ?? DateTime.now;
 
   /// Conditions evaluated before requesting a review.
   final ReviewConditions conditions;
@@ -132,7 +132,8 @@ final class ConditionalInAppReview {
 
     _requestInProgress = true;
     try {
-      final decision = await evaluateEligibility(currentVersion: currentVersion);
+      final decision =
+          await evaluateEligibility(currentVersion: currentVersion);
       if (decision != ReviewDecision.eligible) {
         return decision;
       }

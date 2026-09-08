@@ -13,7 +13,7 @@ abstract interface class ReviewRequester {
 final class InAppReviewRequester implements ReviewRequester {
   /// Creates a requester.
   InAppReviewRequester({InAppReview? inAppReview})
-    : _inAppReview = inAppReview ?? InAppReview.instance;
+      : _inAppReview = inAppReview ?? InAppReview.instance;
 
   final InAppReview _inAppReview;
 
