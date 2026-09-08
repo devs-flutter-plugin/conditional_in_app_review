@@ -4,9 +4,9 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   group('ConditionalInAppReview', () {
     test('requests review when all conditions are satisfied', () async {
-      final storage = MemoryReviewStorage();
-      final requester = FakeReviewRequester();
-      final clock = MutableClock(DateTime.utc(2026, 1, 1));
+      final storage = _MemoryReviewStorage();
+      final requester = _FakeReviewRequester();
+      final clock = _MutableClock(DateTime.utc(2026, 1, 1));
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
           minDaysAfterInstall: 2,
@@ -32,10 +32,10 @@ void main() {
     });
 
     test('does not double count initialize on the same instance', () async {
-      final storage = MemoryReviewStorage();
+      final storage = _MemoryReviewStorage();
       final review = ConditionalInAppReview(
         storage: storage,
-        requester: FakeReviewRequester(),
+        requester: _FakeReviewRequester(),
       );
 
       await review.initialize();
@@ -45,9 +45,9 @@ void main() {
     });
 
     test('enforces cooldown after a request', () async {
-      final storage = MemoryReviewStorage();
-      final requester = FakeReviewRequester();
-      final clock = MutableClock(DateTime.utc(2026, 1, 1));
+      final storage = _MemoryReviewStorage();
+      final requester = _FakeReviewRequester();
+      final clock = _MutableClock(DateTime.utc(2026, 1, 1));
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
           minDaysAfterInstall: 0,
@@ -81,8 +81,8 @@ void main() {
           cooldown: Duration.zero,
           requestOncePerVersion: true,
         ),
-        storage: MemoryReviewStorage(),
-        requester: FakeReviewRequester(),
+        storage: _MemoryReviewStorage(),
+        requester: _FakeReviewRequester(),
       );
 
       await review.initialize();
@@ -102,7 +102,7 @@ void main() {
     });
 
     test('does not record an unavailable request', () async {
-      final storage = MemoryReviewStorage();
+      final storage = _MemoryReviewStorage();
       final review = ConditionalInAppReview(
         conditions: const ReviewConditions(
           minDaysAfterInstall: 0,
@@ -110,7 +110,7 @@ void main() {
           cooldown: Duration.zero,
         ),
         storage: storage,
-        requester: FakeReviewRequester(available: false),
+        requester: _FakeReviewRequester(available: false),
       );
 
       await review.initialize();
@@ -121,16 +121,16 @@ void main() {
   });
 }
 
-final class MutableClock {
-  MutableClock(this.value);
+final class _MutableClock {
+  _MutableClock(this.value);
 
   DateTime value;
 
   DateTime call() => value;
 }
 
-final class FakeReviewRequester implements ReviewRequester {
-  FakeReviewRequester({this.available = true});
+final class _FakeReviewRequester implements ReviewRequester {
+  _FakeReviewRequester({this.available = true});
 
   final bool available;
   int requestCount = 0;
@@ -144,7 +144,7 @@ final class FakeReviewRequester implements ReviewRequester {
   }
 }
 
-final class MemoryReviewStorage implements ReviewStorage {
+final class _MemoryReviewStorage implements ReviewStorage {
   DateTime? firstInitializedAt;
   int launchCount = 0;
   int significantEventCount = 0;

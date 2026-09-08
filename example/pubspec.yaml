@@ -1,0 +1,17 @@
+name: conditional_in_app_review_example
+description: Example application for conditional_in_app_review.
+publish_to: none
+
+version: 1.0.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  conditional_in_app_review:
+    path: ../
+
+flutter:
+  uses-material-design: true
