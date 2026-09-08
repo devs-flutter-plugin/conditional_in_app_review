@@ -30,7 +30,8 @@ final class ConditionalInAppReview {
   ReviewRequester? _defaultRequester;
 
   ReviewStorage get _storage =>
-      _storageOverride ?? (_defaultStorage ??= SharedPreferencesReviewStorage());
+      _storageOverride ??
+      (_defaultStorage ??= SharedPreferencesReviewStorage());
 
   ReviewRequester get _requester =>
       _requesterOverride ?? (_defaultRequester ??= InAppReviewRequester());
